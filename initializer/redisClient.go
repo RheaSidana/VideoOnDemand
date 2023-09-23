@@ -2,6 +2,8 @@ package initializer
 
 import (
 	"context"
+	"os"
+	"strconv"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -10,10 +12,12 @@ var RedisDB *redis.Client
 var Ctx context.Context
 
 func NewRedisClient(ctx context.Context) {
+	db, _ := strconv.Atoi(os.Getenv("REDIS_DB"))
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // No password by default
-		DB:       0,  // Default DB
+		Addr:     os.Getenv("REDIS_DB_ADDR"),
+		Password: os.Getenv("REDIS_DB_PASSWORD"),
+		DB:       db,  // Default DB
 	})
 
 	// Check if Redis is reachable

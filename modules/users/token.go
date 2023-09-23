@@ -7,9 +7,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey string = (os.Getenv("SECRET"))
 
 func generateToken(userEmail string) (string, error) {
+	var secretKey string = (os.Getenv("SECRET"))
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["userEmail"] = userEmail

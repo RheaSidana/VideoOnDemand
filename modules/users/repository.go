@@ -20,12 +20,12 @@ func NewRepository(client *gorm.DB) Repository {
 }
 
 func (r *repository) Create(user model.User) (model.User, error) {
-	encryptPassword, err := generateFromPassword(user.Password)
+	encryptPassword, err := GenerateFromPassword(user.Password)
 	if err != nil {
 		return model.User{}, err
 	}
 	user.Password = encryptPassword
-	
+
 	role, err := setRole(user.Role)
 	if err != nil {
 		return model.User{}, err

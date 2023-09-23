@@ -72,6 +72,8 @@ func (h *Handler) LoginHandler(c *gin.Context) {
 		return
 	}
 
+	c.Header("Authorization", "Bearer " + token)
+
 	c.JSON(200, LoginResponse{
 		Token: token,
 		Message: "User Logged in successfully!",

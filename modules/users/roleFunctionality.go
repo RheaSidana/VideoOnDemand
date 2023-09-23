@@ -7,19 +7,19 @@ var UserRole = []string{
 	"CUSTOMER",
 }
 
-func userRoleAdmin() string {
-	return UserRole[1]
+func UserRoleAdmin() string {
+	return UserRole[0]
 }
 
-func userRoleCustomer() string {
-	return UserRole[2]
+func UserRoleCustomer() string {
+	return UserRole[1]
 }
 
 func setRole(role string) (string, error) {
 	if role == "admin" {
-		return userRoleAdmin(), nil
+		return UserRoleAdmin(), nil
 	} else if role == "customer" {
-		return userRoleCustomer(), nil
+		return UserRoleCustomer(), nil
 	}
 
 	return "", errors.New("inavlid role provided")

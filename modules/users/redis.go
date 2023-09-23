@@ -2,14 +2,17 @@ package users
 
 import (
 	"context"
+	"errors"
 	"vod/model"
 
 	"github.com/go-redis/redis/v8"
 )
 
+var SetName = "Users"
+
 type RedisRepository interface {
 	SetInRedis(user model.User, token string) error
-	GetFromRedis(user model.User) (string, error)
+	GetFromRedis(user model.User) (model.User, error)
 }
 
 type redisRepository struct {
@@ -26,45 +29,58 @@ func NewRedisRepository(client *redis.Client, ctx context.Context) RedisReposito
 
 func (r *redisRepository) SetInRedis(user model.User, token string) error {
 	key, val := createRedisKeyValuePair(user, token)
-	value, _ := r.GetFromRedis(user)
 
-	isAvailable, err := isAvailableInRedis(val, value)
-	if err != nil {
-		return err
-	}
-	if isAvailable {
+	exists, _ := r.client.SIsMember(r.ctx, key, val).Result()
+	if exists {
 		return nil
 	}
 
-	return r.client.Set(r.ctx, key, val, 0).Err()
+	multipleUsers, err := r.client.SMembers(r.ctx, SetName).Result()
+	foundRedisData, _ := findFromSet(user.Email, multipleUsers, err)
+	if foundRedisData != (RedisData{}) {
+		foundRedisData, _ := foundRedisData.MarshalBinary()
+		r.client.SRem(r.ctx, key, foundRedisData)
+	}
+
+	return r.client.SAdd(r.ctx, key, val).Err()
 }
 
-func (r *redisRepository) GetFromRedis(user model.User) (string, error) {
-	return r.client.Get(r.ctx, user.Email).Result()
+func (r *redisRepository) GetFromRedis(user model.User) (model.User, error) {
+	multipleUsers, err := r.client.SMembers(r.ctx, SetName).Result()
+
+	data, err := findFromSet(user.Email, multipleUsers, err)
+
+	return data.User, err
 }
 
-func isAvailableInRedis(val RedisData, dataInRedis string) (bool, error) {
-	jsonString, err := val.MarshalBinary()
+func findFromSet(searchForEmail string, redisDatas []string, err error) (
+	RedisData, error,
+) {
 	if err != nil {
-		return false, err
-	}
-	valString := string(jsonString)
-
-	if valString == dataInRedis {
-		return true, nil
+		return RedisData{}, err
 	}
 
-	return false, nil
+	for _, rdata := range redisDatas {
+
+		var data RedisData
+		data.UnmarshalBinary([]byte(rdata))
+
+		if data.User.Email == searchForEmail {
+			return data, nil
+		}
+	}
+
+	return RedisData{}, errors.New("unable to find in redis")
 }
 
 func createRedisKeyValuePair(user model.User, token string) (
-	string, RedisData,
+	string, []byte,
 ) {
-	key := user.Email
-	val := RedisData{
+	key := SetName
+	val, _ := RedisData{
 		User:  user,
 		Token: token,
-	}
+	}.MarshalBinary()
 
 	return key, val
 }
