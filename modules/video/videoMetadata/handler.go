@@ -3,6 +3,7 @@ package videoMetadata
 import (
 	// "fmt"
 	"vod/model"
+	"vod/modules/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,6 +14,10 @@ type Handler struct {
 }
 
 func (h *Handler) PlayVideoHandler(c *gin.Context) {
+	if !middleware.IsAuthorisedAccess(c) {
+		return
+	}
+
 	// should have videoMD ID
 	var videoToPlay model.VideoMetaData
 	c.BindJSON(&videoToPlay)
@@ -47,24 +52,3 @@ func (h *Handler) PlayVideoHandler(c *gin.Context) {
 		VideoMD: videoMD,
 	})
 }
-
-/*
-func (h *Handler) SignUpHandler(c *gin.Context) {
-
-	user, err := h.repository.Create(newUser)
-	if err != nil {
-		c.JSON(500, ErrorResponse{
-			Message: "Unable to add user."})
-		return
-	}
-
-	err = h.redisRepository.SetInRedis(user, "")
-	if err != nil {
-		c.JSON(500, ErrorResponse{
-			Message: "Unable to add user."})
-		return
-	}
-
-	c.JSON(200, UserResponse{
-		Message: user.Name + " created successfully!!"})
-} */

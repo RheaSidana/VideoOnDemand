@@ -1,7 +1,6 @@
 package videoMetadata
 
 import (
-	// "vod/model"
 	"fmt"
 	"vod/model"
 
@@ -9,8 +8,6 @@ import (
 )
 
 type Repository interface {
-	// Create(user model.User) (model.User, error)
-
 	Find(videoMDToPlay model.VideoMetaData) (model.VideoMetaData, error)
 }
 
@@ -40,23 +37,3 @@ func (r *repository) Find(videoMDToPlay model.VideoMetaData) (model.VideoMetaDat
 	return videoMD, nil
 }
 
-// 	encryptPassword, err := generateFromPassword(user.Password)
-// 	if err != nil {
-// 		return model.User{}, err
-// 	}
-// 	user.Password = encryptPassword
-
-// 	role, err := setRole(user.Role)
-// 	if err != nil {
-// 		return model.User{}, err
-// 	}
-// 	user.Role = role
-
-// 	result := r.client.Create(&user)
-
-// 	if result.Error != nil {
-// 		return model.User{}, result.Error
-// 	}
-
-// 	return user, nil
-// }

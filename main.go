@@ -5,7 +5,7 @@ import (
 	"vod/initializer"
 	"vod/modules/middleware"
 	"vod/modules/users"
-	"vod/modules/video/videoMetadata"
+	videos "vod/modules/video"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +24,7 @@ func main() {
 	users.Apis(r)
 	protected := middleware.Apis(r)
 
-	videoMetadata.Apis(protected)
+	videos.Apis(protected)
 
 
 	r.Run()

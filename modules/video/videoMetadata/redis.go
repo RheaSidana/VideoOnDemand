@@ -10,7 +10,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var SetName = "VideoMetaData"
+var SET_NAME = "VideoMetaData"
 
 type RedisRepository interface {
 	SetInRedis(videoMetadata model.VideoMetaData) error
@@ -51,7 +51,7 @@ func (r *redisRepository) GetFromRedis(videoMD model.VideoMetaData) (
 	model.VideoMetaData, error,
 ) {
 	// key := "vidMD:" + strconv.Itoa(int(videoMD.ID))
-	key := SetName
+	key := SET_NAME
 	redisDataString, err := r.client.SMembers(r.ctx, key).Result()
 
 	rdata, err := findFromSet(int(videoMD.ID), redisDataString, err)
@@ -80,7 +80,7 @@ func findFromSet(searchForID int, redisDatas []string, err error) (
 
 func createRedisKeyValuePair(videoMD model.VideoMetaData) (string, []byte) {
 	// key := "vidMD:" + strconv.Itoa(int(videoMD.ID))
-	key := SetName
+	key := SET_NAME
 	val, _ := RedisData{
 		VideoMetaData: videoMD,
 	}.MarshalBinary()
