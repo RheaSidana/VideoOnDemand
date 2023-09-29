@@ -1,6 +1,4 @@
-package videoEncoding
-
-import videoProcessing "vod/modules/video/encoding/pocessVideo"
+package videoEncryption
 
 var BASE_DIR string
 var BASE_DIR_PROCESSING string
@@ -17,13 +15,4 @@ func AssignConstants(
 	BASE_DIR_ORIGINAL = baseDirORIGINAL
 	BASE_DIR_PROCESSING = baseDirPROCESSING
 	BASE_DIR_ENCODED = baseDirENCODED
-}
-
-func assignConstantsToProcessing() {
-	videoProcessing.AssignConstants(
-		BASE_DIR,
-		BASE_DIR_ORIGINAL,
-		BASE_DIR_ENCODED,
-		BASE_DIR_PROCESSING,
-	)
 }

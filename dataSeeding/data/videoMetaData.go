@@ -17,6 +17,7 @@ func videoMDData(users []model.User) []model.VideoMetaData {
 		UploadedBy: int(users[0].ID),
 		Length:     15,
 		Size:       950,
+		Format:     "mp4",
 		Resolution: videoEncoding.Resolution1920x1080(),
 	}
 
@@ -34,7 +35,7 @@ func videoMDData(users []model.User) []model.VideoMetaData {
 	return videoMDList
 }
 
-func AddVideoMDToDB(users []model.User) ([]model.VideoMetaData) {
+func AddVideoMDToDB(users []model.User) []model.VideoMetaData {
 	var videoMDList []model.VideoMetaData
 	for _, videoMD := range videoMDData(users) {
 		if initializer.Db.Where(

@@ -1,4 +1,4 @@
-package videoEncoding
+package videoEncryption
 
 import (
 	"vod/initializer"
@@ -9,7 +9,8 @@ import (
 func Apis(r *gin.RouterGroup) {
 	repository := InitRepository(initializer.Db)
 	redisRepository := InitRedisRepository(initializer.RedisDB, initializer.Ctx)
+	// handler
 	handler := InitHandler(repository, redisRepository)
 
-	r.POST("/video/encode", handler.VideoEncodeHandler)
+	r.POST("/video/encrypt", handler.VideoEncryptHandler)
 }

@@ -73,7 +73,3 @@ func (h *Handler) VideoEncodeHandler(c *gin.Context) {
 	})
 
 }
-
-func (h *Handler) tempForConcat(c *gin.Context) {
-	// videoData()
-}

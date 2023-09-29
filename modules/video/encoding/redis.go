@@ -2,15 +2,17 @@ package videoEncoding
 
 import (
 	"context"
-	"vod/model"
 	"errors"
+
+	// "fmt"
+	"vod/model"
 
 	"github.com/go-redis/redis/v8"
 )
 
 type RedisRepository interface {
 	SetInRedis(videoMetadata model.VideoLinks) error
-	GetFromRedis(videoMD model.VideoLinks) (model.VideoLinks, error)
+	GetFromRedis(videoMD model.VideoLinks) ([]model.VideoLinks, error)
 }
 
 type redisRepository struct {
@@ -34,7 +36,12 @@ func (r *redisRepository) SetInRedis(videoMD model.VideoLinks) error {
 	}
 
 	multipleVideoMD, err := r.client.SMembers(r.ctx, key).Result()
-	foundRedisData, _ := findFromSet(int(videoMD.ID), multipleVideoMD, err)
+	foundRedisData, _ := findFromSet(
+		int(videoMD.VideoMetaDataID),
+		videoMD.Link,
+		multipleVideoMD,
+		err,
+	)
 	if foundRedisData != (RedisData{}) {
 		foundRedisData, _ := foundRedisData.MarshalBinary()
 		r.client.SRem(r.ctx, key, foundRedisData)
@@ -44,16 +51,42 @@ func (r *redisRepository) SetInRedis(videoMD model.VideoLinks) error {
 }
 
 func (r *redisRepository) GetFromRedis(videoMD model.VideoLinks) (
-	model.VideoLinks, error,
+	[]model.VideoLinks, error,
 ) {
 	key := SET_NAME
 	redisDataString, err := r.client.SMembers(r.ctx, key).Result()
 
-	rdata, err := findFromSet(int(videoMD.ID), redisDataString, err)
-	return rdata.VideoLinks, err
+	rdatas, err := findAllFromSet(
+		int(videoMD.VideoMetaDataID),
+		redisDataString,
+		err,
+	)
+	return extractLinksFrom(rdatas), err
 }
 
-func findFromSet(searchForID int, redisDatas []string, err error) (
+func findAllFromSet(searchForID int, redisDataString []string, err error) (
+	[]RedisData, error,
+) {
+	if err != nil {
+		return []RedisData{}, err
+	}
+
+	var redisDatas []RedisData
+	for _, rdata := range redisDataString {
+
+		var data RedisData
+		data.UnmarshalBinary([]byte(rdata))
+
+		if data.VideoLinks.VideoMetaDataID == uint(searchForID) {
+			redisDatas = append(redisDatas, data)
+		}
+	}
+
+	return redisDatas, nil
+
+}
+
+func findFromSet(searchForID int, link string, redisDatas []string, err error) (
 	RedisData, error,
 ) {
 	if err != nil {
@@ -65,7 +98,8 @@ func findFromSet(searchForID int, redisDatas []string, err error) (
 		var data RedisData
 		data.UnmarshalBinary([]byte(rdata))
 
-		if data.VideoLinks.ID == uint(searchForID) {
+		if data.VideoLinks.VideoMetaDataID == uint(searchForID) &&
+			data.VideoLinks.Link == link {
 			return data, nil
 		}
 	}
@@ -80,4 +114,13 @@ func createRedisKeyValuePair(videoLinks model.VideoLinks) (string, []byte) {
 	}.MarshalBinary()
 
 	return key, val
+}
+
+func extractLinksFrom(redisDatas []RedisData) []model.VideoLinks {
+	var links []model.VideoLinks
+	for _, data := range redisDatas {
+		links = append(links, data.VideoLinks)
+	}
+
+	return links
 }

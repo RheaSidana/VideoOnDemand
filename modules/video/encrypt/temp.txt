@@ -1,0 +1,15 @@
+hit Apis: encrypt - done
+request body : videoID - done
+valid request body -> not empty - done
+extract -> validity of videoID -> from redis - done
+extract -> all videoLinks would get encrypted -> from redis -done 
+encrypt function -> returns map[encoded]encrypted -done
+    -> get all the videos - path
+    -> create new folder as encrypt
+    -> create the encrypted videos with encrypt appended to the encoded videos
+    -> save the encrypted videos
+    -> delete encoded videos
+    -> return the map
+
+modify psql -done 
+modify redis - done 

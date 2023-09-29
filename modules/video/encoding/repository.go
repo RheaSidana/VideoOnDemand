@@ -47,7 +47,7 @@ func createVideoLinks(repo repository, videoId uint, videoLinks []string) ([]mod
 	for _, link := range videoLinks {
 		videoLink := model.VideoLinks{
 			VideoMetaDataID: videoId,
-			EncodedLink:     link,
+			Link:            link,
 		}
 
 		res := repo.client.Create(&videoLink)

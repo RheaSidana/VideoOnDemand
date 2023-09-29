@@ -85,7 +85,8 @@ func encode(
 	}
 
 	// delete processing folder
-	err = deleteFolder(inputVideoTitle)
+	folderName := BASE_DIR_PROCESSING + inputVideoTitle
+	err = deleteFolder(folderName)
 	if err != nil {
 		fmt.Println("Error: (delete folder) :", err.Error())
 		return []string{}, err
