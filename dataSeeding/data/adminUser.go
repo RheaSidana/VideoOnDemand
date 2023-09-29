@@ -8,7 +8,7 @@ import (
 )
 
 func userData() []model.User {
-	pswd, _ := users.GenerateFromPassword("apsswRd#2")
+	pswd, _ := users.NewEncryption().GenerateFromPassword("apsswRd#2")
 	role := users.UserRoleAdmin()
 
 	userToAdd := model.User{

@@ -13,6 +13,7 @@ type Repository interface {
 
 type repository struct {
 	client *gorm.DB
+	encryption IEncryption
 }
 
 func NewRepository(client *gorm.DB) Repository {
@@ -20,7 +21,8 @@ func NewRepository(client *gorm.DB) Repository {
 }
 
 func (r *repository) Create(user model.User) (model.User, error) {
-	encryptPassword, err := GenerateFromPassword(user.Password)
+	r.encryption = NewEncryption()
+	encryptPassword, err := r.encryption.GenerateFromPassword(user.Password)
 	if err != nil {
 		return model.User{}, err
 	}
@@ -48,7 +50,8 @@ func (r *repository) Find(userForLogin model.User) (model.User, error) {
 		return model.User{}, res.Error
 	}
 
-	err := compareHashAndPassword(userForLogin.Password, userInDB.Password)
+	r.encryption = NewEncryption()
+	err := r.encryption.CompareHashAndPassword(userForLogin.Password, userInDB.Password)
 	if err != nil {
 		return model.User{}, err
 	}

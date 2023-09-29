@@ -3,5 +3,8 @@ package middleware
 import "github.com/gin-gonic/gin"
 
 func Apis(r *gin.Engine) (*gin.RouterGroup){
-	return r.Group("/protected", AuthMiddleware)
+	handler := Handler{
+		auth: NewAuthorisation(),
+	}
+	return r.Group("/protected", handler.AuthMiddleware)
 }

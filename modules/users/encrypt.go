@@ -6,7 +6,18 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GenerateFromPassword(password string) (string, error) {
+type IEncryption interface{
+	CompareHashAndPassword(passwordForLogin, passwordInDB string) error
+	GenerateFromPassword(password string) (string, error)
+}
+
+type encryption struct{}
+
+func NewEncryption() IEncryption{
+	return &encryption{}
+}
+
+func (r *encryption) GenerateFromPassword(password string) (string, error) {
 	encryptPassword, err := bcrypt.GenerateFromPassword(
 		[]byte(password),
 		bcrypt.DefaultCost)
@@ -18,7 +29,7 @@ func GenerateFromPassword(password string) (string, error) {
 	return password, nil
 }
 
-func compareHashAndPassword(passwordForLogin, passwordInDB string) error {
+func (e *encryption) CompareHashAndPassword(passwordForLogin, passwordInDB string) error {
 	err := bcrypt.CompareHashAndPassword(
 		[]byte(passwordInDB),
 		[]byte(passwordForLogin))

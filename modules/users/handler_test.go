@@ -12,9 +12,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestCreateUserHandlerWhenEmptyUser(t *testing.T) {
+func TestSignupHandlerWhenEmptyUser(t *testing.T) {
 	repo := new(mocks.Repository)
 	handler := Handler{repository: repo}
 	gin.SetMode(gin.TestMode)
@@ -35,7 +36,7 @@ func TestCreateUserHandlerWhenEmptyUser(t *testing.T) {
 	assert.Equal(t, expectedUser, actualUser)
 }
 
-func TestCreateUserHandlerWhenUnableToCreateUser(t *testing.T) {
+func TestSignupHandlerWhenUnableToCreateUserInDB(t *testing.T) {
 	repo := new(mocks.Repository)
 	handler := Handler{repository: repo}
 	gin.SetMode(gin.TestMode)
@@ -45,6 +46,7 @@ func TestCreateUserHandlerWhenUnableToCreateUser(t *testing.T) {
 		Name:     "test",
 		Email:    "test@example.com",
 		Password: "Test@3_5",
+		Role:     "admin",
 	}
 	b, _ := json.Marshal(newUser)
 	body := bytes.NewBuffer(b)
@@ -57,13 +59,17 @@ func TestCreateUserHandlerWhenUnableToCreateUser(t *testing.T) {
 	actualUser, _ := repo.Create(newUser)
 	r.ServeHTTP(respR, req)
 
-	assert.Equal(t, respR.Code, http.StatusInternalServerError)
+	assert.Equal(t, http.StatusInternalServerError, respR.Code)
 	assert.NotEqual(t, expectedUser, actualUser)
 }
 
-func TestCreateUserHandler(t *testing.T) {
+func TestSignUpHandlerWhenUnableToCreateUserInRedisDB(t *testing.T) {
 	repo := new(mocks.Repository)
-	handler := Handler{repository: repo}
+	redis := new(mocks.RedisRepository)
+	handler := Handler{
+		repository: repo,
+		redisRepository: redis,
+	}
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
 	r.POST("/user", handler.SignUpHandler)
@@ -71,6 +77,7 @@ func TestCreateUserHandler(t *testing.T) {
 		Name:     "test",
 		Email:    "test@example.com",
 		Password: "Test@3_5",
+		Role:     "admin",
 	}
 	b, _ := json.Marshal(newUser)
 	body := bytes.NewBuffer(b)
@@ -79,14 +86,51 @@ func TestCreateUserHandler(t *testing.T) {
 	expectedUser := newUser
 	expectedUser.ID = 1
 	repo.On("Create", newUser).Return(expectedUser, nil)
+	redis.On(
+		"SetInRedis", 
+		expectedUser,
+		mock.AnythingOfType("string"),
+	).Return(errors.New("error occurred"))
 
 	actualUser, _ := repo.Create(newUser)
 	r.ServeHTTP(respR, req)
 
-	assert.Equal(t, respR.Code, http.StatusOK)
+	assert.Equal(t, http.StatusInternalServerError, respR.Code)
 	assert.Equal(t, expectedUser, actualUser)
 }
 
-// func (h *Handler) FindUser(c *gin.Context, user int) (model.User, error){
-// 	return h.repository.Find(user)
-// }
+func TestSignUpHandler(t *testing.T) {
+	repo := new(mocks.Repository)
+	redis := new(mocks.RedisRepository)
+	handler := Handler{
+		repository: repo,
+		redisRepository: redis,
+	}
+	gin.SetMode(gin.TestMode)
+	r := gin.Default()
+	r.POST("/user", handler.SignUpHandler)
+	newUser := model.User{
+		Name:     "test",
+		Email:    "test@example.com",
+		Password: "Test@3_5",
+		Role:     "admin",
+	}
+	b, _ := json.Marshal(newUser)
+	body := bytes.NewBuffer(b)
+	req, _ := http.NewRequest(http.MethodPost, "/user", body)
+	respR := httptest.NewRecorder()
+	expectedUser := newUser
+	expectedUser.ID = 1
+	repo.On("Create", newUser).Return(expectedUser, nil)
+	redis.On(
+		"SetInRedis", 
+		expectedUser,
+		mock.AnythingOfType("string"),
+	).Return(nil)
+
+	actualUser, _ := repo.Create(newUser)
+	r.ServeHTTP(respR, req)
+
+	assert.Equal(t, http.StatusOK, respR.Code)
+	assert.Equal(t, expectedUser, actualUser)
+}

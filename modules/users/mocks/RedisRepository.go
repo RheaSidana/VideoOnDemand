@@ -14,18 +14,18 @@ type RedisRepository struct {
 }
 
 // GetFromRedis provides a mock function with given fields: user
-func (_m *RedisRepository) GetFromRedis(user model.User) (string, error) {
+func (_m *RedisRepository) GetFromRedis(user model.User) (model.User, error) {
 	ret := _m.Called(user)
 
-	var r0 string
+	var r0 model.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(model.User) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(model.User) (model.User, error)); ok {
 		return rf(user)
 	}
-	if rf, ok := ret.Get(0).(func(model.User) string); ok {
+	if rf, ok := ret.Get(0).(func(model.User) model.User); ok {
 		r0 = rf(user)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(model.User)
 	}
 
 	if rf, ok := ret.Get(1).(func(model.User) error); ok {

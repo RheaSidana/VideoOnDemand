@@ -11,9 +11,9 @@ type RedisData struct {
 }
 
 func (rd RedisData) MarshalBinary() ([]byte, error) {
-    return json.Marshal(rd) // You can choose any binary serialization format you prefer
+    return json.Marshal(rd) 
 }
 
 func (rd *RedisData) UnmarshalBinary(data []byte) error {
-    return json.Unmarshal(data, rd) // You should use the same serialization format as MarshalBinary
+    return json.Unmarshal(data, rd) 
 }

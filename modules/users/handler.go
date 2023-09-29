@@ -7,8 +7,9 @@ import (
 )
 
 type Handler struct {
-	repository Repository
+	repository      Repository
 	redisRepository RedisRepository
+	tokenService    IToken
 }
 
 func (h *Handler) SignUpHandler(c *gin.Context) {
@@ -48,7 +49,7 @@ func (h *Handler) LoginHandler(c *gin.Context) {
 	}
 
 	user := model.User{
-		Email: loginUser.Email,
+		Email:    loginUser.Email,
 		Password: loginUser.Password,
 	}
 	user, err := h.repository.Find(user)
@@ -58,7 +59,8 @@ func (h *Handler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := generateToken(user.Email)
+	h.tokenService = NewToken(user.Email)
+	token, err := h.tokenService.GenerateToken()
 	if err != nil {
 		c.JSON(500, ErrorResponse{
 			Message: "error : Error generating token"})
@@ -68,15 +70,15 @@ func (h *Handler) LoginHandler(c *gin.Context) {
 	err = h.redisRepository.SetInRedis(user, token)
 	if err != nil {
 		c.JSON(500, ErrorResponse{
-			Message: "error : Error adding token to redis"+ err.Error()})
+			Message: "error : Error adding token to redis" + err.Error()})
 		return
 	}
 
-	c.Header("Authorization", "Bearer " + token)
+	c.Header("Authorization", "Bearer "+token)
 
 	c.JSON(200, LoginResponse{
-		Token: token,
+		Token:   token,
 		Message: "User Logged in successfully!",
-		User: user,
+		User:    user,
 	})
 }

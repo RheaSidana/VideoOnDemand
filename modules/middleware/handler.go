@@ -1,27 +1,33 @@
 package middleware
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware(c *gin.Context) {
+type Handler struct{
+	auth AuhorisationUtils
+}
+
+func (h *Handler) AuthMiddleware(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
-	if isEmpty(tokenString) {
+	if h.auth.IsEmpty(tokenString) {
 		c.JSON(401, ErrorResponse{
-			Message: "No token provided, Unauthorized Access",
+			Message: "No token provided, Unh.authorized Access",
 		})
 		return
 	}
 
-	if isNotBearerToken(tokenString) {
+	if h.auth.IsNotBearerToken(tokenString) {
 		c.JSON(401, ErrorResponse{
 			Message: "Invalid token format, Unauthorized Access",
 		})
 		return
 	}
 
-	token, err := tokenParse(tokenString)
+	token, err := h.auth.TokenParse(tokenString)
 	if err != nil || !token.Valid{
 		c.JSON(401, ErrorResponse{
 			Message: "Invalid token, Unauthorized Access",
@@ -38,7 +44,7 @@ func AuthMiddleware(c *gin.Context) {
 	}
 
 	exp, ok := claims["exp"].(float64)
-	if !ok || isExpiredToken(exp) {
+	if !ok || h.auth.IsExpiredToken(exp) {
 		c.JSON(401, ErrorResponse{
 			Message: "Token has expired",
 		})
@@ -52,6 +58,8 @@ func AuthMiddleware(c *gin.Context) {
 		})
 		return
 	}
+
+	fmt.Println("userEmail", userEmail)
 
 	c.Set("userEmail", userEmail)
 	// val, _ := c.Get("userEmail")
