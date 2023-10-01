@@ -1,30 +1,26 @@
 package videoEncryption
 
 import (
-	"vod/initializer"
 	"vod/model"
 	videoEncoding "vod/modules/video/encoding"
 	"vod/modules/video/videoMetadata"
 )
 
-func videoMDfromRedis(videoID int) (model.VideoMetaData, error) {
-	videoMDRedisRepo := videoMetadata.InitRedisRepository(
-		initializer.RedisDB,
-		initializer.Ctx,
-	)
+func videoMDfromRedis(
+	videoID int,
+	videoMDRedisRepo videoMetadata.RedisRepository,
+) (model.VideoMetaData, error) {
 	var videoMD model.VideoMetaData
 	videoMD.ID = uint(videoID)
 	return videoMDRedisRepo.GetFromRedis(videoMD)
 }
 
-func videoLinksFromRedis(videoMD model.VideoMetaData) (
+func videoLinksFromRedis(
+	videoMD model.VideoMetaData,
+	videoLinksRedisRepo videoEncoding.RedisRepository,
+) (
 	[]model.VideoLinks, error,
 ) {
-	videoLinksRedisRepo := videoEncoding.InitRedisRepository(
-		initializer.RedisDB,
-		initializer.Ctx,
-	)
-	
 	var videoLink model.VideoLinks
 	videoLink.VideoMetaDataID = videoMD.ID
 	return videoLinksRedisRepo.GetFromRedis(

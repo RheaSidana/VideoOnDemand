@@ -3,13 +3,18 @@ package videoEncryption
 import (
 	// "fmt"
 	"vod/modules/middleware"
+	videoEncoding "vod/modules/video/encoding"
+	"vod/modules/video/videoMetadata"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	repository      Repository
-	redisRepository RedisRepository
+	repository            Repository
+	redisRepository       RedisRepository
+	redisRepoVideoMD      videoMetadata.RedisRepository
+	redisRepoVideoEncoded videoEncoding.RedisRepository
+	videoEncrypt          IEncryption
 }
 
 func (h *Handler) VideoEncryptHandler(c *gin.Context) {
@@ -27,7 +32,10 @@ func (h *Handler) VideoEncryptHandler(c *gin.Context) {
 	}
 
 	//videoMD
-	videoMD, err := videoMDfromRedis(videoToEncrypt.VideoID)
+	videoMD, err := videoMDfromRedis(
+		videoToEncrypt.VideoID,
+		h.redisRepoVideoMD,
+	)
 	if err != nil {
 		c.JSON(500, ErrorResponse{
 			Message: "Invalid Video Meta Data."})
@@ -35,7 +43,10 @@ func (h *Handler) VideoEncryptHandler(c *gin.Context) {
 	}
 
 	// videoLinks = encoded
-	videoLinks, err := videoLinksFromRedis(videoMD)
+	videoLinks, err := videoLinksFromRedis(
+		videoMD,
+		h.redisRepoVideoEncoded,
+	)
 	if err != nil {
 		c.JSON(500, ErrorResponse{
 			Message: "Error Occured! Unable to find encoded videos."})
@@ -47,7 +58,7 @@ func (h *Handler) VideoEncryptHandler(c *gin.Context) {
 		return
 	}
 
-	mapVideoEncodedToVideoEncrypted, err := encrypt(videoLinks)
+	mapVideoEncodedToVideoEncrypted, err := h.videoEncrypt.Encrypt(videoLinks)
 	if err != nil {
 		c.JSON(500, ErrorResponse{
 			Message: "Unable to encrypt video. " + err.Error()})
@@ -56,7 +67,7 @@ func (h *Handler) VideoEncryptHandler(c *gin.Context) {
 
 	//update psql
 	isUpdated, err := h.repository.Update(mapVideoEncodedToVideoEncrypted)
-	if err!=nil && !isUpdated {
+	if err != nil && !isUpdated {
 		c.JSON(500, ErrorResponse{
 			Message: "Unable to encrypt video, save to db. " + err.Error()})
 		return
@@ -64,15 +75,15 @@ func (h *Handler) VideoEncryptHandler(c *gin.Context) {
 
 	//update redis
 	isUpdated, err = h.redisRepository.UpdateInRedis(mapVideoEncodedToVideoEncrypted)
-	if err!=nil && !isUpdated {
+	if err != nil && !isUpdated {
 		c.JSON(500, ErrorResponse{
 			Message: "Unable to encrypt video, save to rdb. " + err.Error()})
 		return
 	}
 
 	c.JSON(200, VideoEncryptResponse{
-		Message: "Video Encrypted successfully!",
-		VideoMD: videoMD,
+		Message:            "Video Encrypted successfully!",
+		VideoMD:            videoMD,
 		EncodedToEncrypted: mapVideoEncodedToVideoEncrypted,
 	})
 }

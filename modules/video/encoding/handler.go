@@ -11,6 +11,8 @@ import (
 type Handler struct {
 	repository      Repository
 	redisRepository RedisRepository
+	functionality   IFunctionality
+	encodingVideo	IEncoding
 }
 
 func (h *Handler) VideoEncodeHandler(c *gin.Context) {
@@ -21,27 +23,27 @@ func (h *Handler) VideoEncodeHandler(c *gin.Context) {
 	videoToEncode, err := c.FormFile("video")
 	if err != nil {
 		c.JSON(400, ErrorResponse{
-			Message: err.Error() +"   Bad Request: Unable to encode video.",
+			Message: err.Error() + "   Bad Request: Unable to encode video.",
 		})
 		return
 	}
 
-	fileLoc,err := saveOriginalVideo(c, videoToEncode)
+	fileLoc, err := h.functionality.SaveOriginalVideo(c, videoToEncode)
 	if err != nil {
 		c.JSON(500, ErrorResponse{
 			Message: "Unable to save uploaded video."})
 		return
 	}
 
-	videoData := videoData(fileLoc)
-	fileSavedAt, err := saveVideoToLoc(fileLoc, videoData)
+	videoData := h.functionality.GetVideoData(fileLoc)
+	fileSavedAt, err := h.functionality.SaveVideoToLoc(fileLoc, videoData)
 	if err != nil {
 		c.JSON(500, ErrorResponse{
 			Message: "Unable to save video."})
 		return
 	}
 
-	videoEncodedLinks, err := encode(
+	videoEncodedLinks, err := h.encodingVideo.Encode(
 		videoToEncode.Filename, fileLoc, videoData)
 	if err != nil {
 		c.JSON(500, ErrorResponse{
@@ -62,14 +64,14 @@ func (h *Handler) VideoEncodeHandler(c *gin.Context) {
 	err = saveDataInRedis(*h, videoLinks)
 	if err != nil {
 		c.JSON(500, ErrorResponse{
-			Message: "error : Error adding token to redis"+ err.Error()})
+			Message: "error : Error adding token to redis: " + err.Error()})
 		return
 	}
 
 	c.JSON(200, VideoEncodeResponse{
-		Message:   "Encoded Successfully!",
+		Message:    "Encoded Successfully!",
 		VideoLinks: videoLinks,
-		VideoMD: videoMD,
+		VideoMD:    videoMD,
 	})
 
 }

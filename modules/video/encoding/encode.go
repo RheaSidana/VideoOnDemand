@@ -10,11 +10,24 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
+type IEncoding interface {
+	Encode(inputVideoFile string, inputFileLoc string,
+		videoData model.VideoData,
+	) ([]string, error)
+}
+
+type encodingVideo struct{}
+
+func NewEncoding() IEncoding{
+	return &encodingVideo{}
+}
+
+
 // current function is encoding the video in
 // Bitrates1500k and Resolution1280x720
-func encode(
+func (e *encodingVideo) Encode(
 	inputVideoFile string, inputFileLoc string,
-	videoData model.VideoData,	
+	videoData model.VideoData,
 ) ([]string, error) {
 	// bitRate := Bitrates800k()
 	// resolution := Resolution1280x720()
@@ -26,13 +39,13 @@ func encode(
 	if err != (nil) {
 		return []string{}, err
 	}
-	
+
 	var wg sync.WaitGroup
 	wg.Add(1)
-	
+
 	assignConstantsToProcessing()
 	splitedVideos, err := videoProcessing.SplitVideoIntoFiveParts(
-		inputVideoFile, inputVideoTitle, createFolder, 
+		inputVideoFile, inputVideoTitle, createFolder,
 		videoData, &wg)
 	if err != (nil) {
 		return []string{}, err

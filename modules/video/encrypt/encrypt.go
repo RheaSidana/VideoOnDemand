@@ -13,7 +13,20 @@ import (
 	"vod/model"
 )
 
-func encrypt(videoLinks []model.VideoLinks) (
+type IEncryption interface{
+	Encrypt(videoLinks []model.VideoLinks) (
+		map[model.VideoLinks]model.VideoLinks,
+		error,
+	)
+}
+
+type videoEncrypt struct{}
+
+func NewEncryption() IEncryption{
+	return &videoEncrypt{}
+}
+
+func (v *videoEncrypt) Encrypt(videoLinks []model.VideoLinks) (
 	map[model.VideoLinks]model.VideoLinks,
 	error,
 ) {

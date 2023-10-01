@@ -12,7 +12,19 @@ import (
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
-func videoData(fileLoc string) model.VideoData {
+type IFunctionality interface {
+	SaveOriginalVideo(c *gin.Context, videoFile *multipart.FileHeader) (string, error)
+	GetVideoData(fileLoc string) model.VideoData
+	SaveVideoToLoc(inputFileLoc string, data model.VideoData) (string, error)
+}
+
+type functionality struct{}
+
+func NewFunctionality() IFunctionality {
+	return &functionality{}
+}
+
+func (f *functionality) GetVideoData(fileLoc string) model.VideoData {
 	// fileLoc := BASE_DIR + "Sample/Title 1.mp4"
 	ffprobe, err := ffmpeg.Probe(fileLoc)
 	if err != nil {
@@ -67,13 +79,13 @@ func videoData(fileLoc string) model.VideoData {
 	return data
 }
 
-func saveOriginalVideo(c *gin.Context, videoFile *multipart.FileHeader) (string, error) {
+func (f *functionality) SaveOriginalVideo(c *gin.Context, videoFile *multipart.FileHeader) (string, error) {
 	saveToLocation := BASE_DIR_ORIGINAL
 	fileLoc := saveToLocation + videoFile.Filename
 	return fileLoc, c.SaveUploadedFile(videoFile, fileLoc)
 }
 
-func saveVideoToLoc(
+func (f *functionality) SaveVideoToLoc(
 	inputFileLoc string,
 	data model.VideoData,
 ) (string, error) {
@@ -84,7 +96,7 @@ func saveVideoToLoc(
 		data.Resolution,
 	)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
 	cmd := ffmpeg.Input(
@@ -100,20 +112,20 @@ func saveVideoToLoc(
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Error: (concat) :", err.Error())
-		return "",err
+		return "", err
 	}
 
 	return outputFileLoc, nil
 }
 
 func saveDataInRedis(
-	h Handler, 
+	h Handler,
 	videoLinks []model.VideoLinks,
 ) error {
 	for _, videoLink := range videoLinks {
 
-		err :=h.redisRepository.SetInRedis(videoLink)
-		if err!=nil {
+		err := h.redisRepository.SetInRedis(videoLink)
+		if err != nil {
 			return err
 		}
 	}

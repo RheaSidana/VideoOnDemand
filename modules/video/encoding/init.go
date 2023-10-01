@@ -19,5 +19,7 @@ func InitHandler(userRepository Repository, userRedisRepository RedisRepository)
 	return Handler{
 		repository: userRepository,
 		redisRepository: userRedisRepository,
+		functionality: NewFunctionality(),
+		encodingVideo: NewEncoding(),
 	}
 }
