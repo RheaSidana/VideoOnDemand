@@ -92,4 +92,9 @@ Postman:
 https://documenter.getpostman.com/view/28378586/2s9YJaY4C3
 ```
 
-<!-- <h1>8. Video Description to use the APIs: </h1> -->
+<h1>8. Video Description to use the APIs: </h1>
+Follow the below link:
+
+```
+https://drive.google.com/file/d/1caC4P_sHuBQCTr_T7EIOVCaa3tPGGWkh/view?usp=sharing
+```
