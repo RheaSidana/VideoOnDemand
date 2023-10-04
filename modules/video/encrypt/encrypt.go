@@ -129,7 +129,14 @@ func encryption(
 ) {
 	defer wg.Done()
 	var outputObj output
+
 	inputVideoPath := videoLink.Link
+	if isAlreadyEncryptedLink(inputVideoPath) {
+		outputObj.Err = errors.New("video is already encrypted")
+		ch <- outputObj
+		return 
+	}
+
 	outputVideoPath, err := getEncryptedOutputVideo(
 		folderPath, videoLink.Link,
 	)
@@ -206,6 +213,10 @@ func encryption(
 	}
 
 	ch <- outputObj
+}
+
+func isAlreadyEncryptedLink(inputVideoPath string) bool {
+	return strings.Contains(inputVideoPath, "Encryption")
 }
 
 func updateEncodedToEncrypted(old model.VideoLinks,
